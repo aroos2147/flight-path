@@ -2,11 +2,11 @@
 # Script for transforming and loading the data into neo4j
 ######################################################################
 
-import queries
+import util.queries as queries
 import csv
 import time
-from constants import COUNTRIES_PATH, AIRLINES_PATH, AIRPORTS_PATH, ROUTES_PATH
-from fancyPrints import printGreen
+from util.constants import COUNTRIES_PATH, AIRLINES_PATH, AIRPORTS_PATH, ROUTES_PATH
+from util.fancyPrints import printGreen
 
 countryCount = 0
 airlineCount = 0

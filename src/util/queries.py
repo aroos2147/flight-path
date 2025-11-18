@@ -2,7 +2,7 @@
 # Methods for executing neo4j queries
 ######################################################################
 
-from constants import DRIVER, SPARK, NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD
+from util.constants import DRIVER, SPARK, NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD
 
 # Executes a generic query on the neo4j database
 def executeQuery(query):

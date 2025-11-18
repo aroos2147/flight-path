@@ -3,7 +3,7 @@
 ######################################################################
 
 import re
-from constants import COUNTRIES_PATH, AIRLINES_PATH, AIRPORTS_PATH
+from util.constants import COUNTRIES_PATH, AIRLINES_PATH, AIRPORTS_PATH
 
 def main():
     formatQuoteMarks(COUNTRIES_PATH)
