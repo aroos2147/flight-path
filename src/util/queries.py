@@ -16,7 +16,7 @@ def executeQuery(query):
 # Loads all nodes of the given name into a Spark dataframe
 def getNodes(name):
     return (SPARK.read
-                .format("ne04j")
+                .format("neo4j")
                 .option("url", NEO4J_URI)
                 .option("authentication.type", "basic")
                 .option("authentication.basic.username", NEO4J_USER)

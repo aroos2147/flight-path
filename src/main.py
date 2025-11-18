@@ -1,7 +1,8 @@
 import util.queries as q;
+from util.constants import SPARK;
 
 def main():
-    airports = q.getAirlines()
+    airports = q.getAirports()
     airports.show()
 
 if __name__ == "__main__":
