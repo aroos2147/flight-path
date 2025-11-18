@@ -2,8 +2,9 @@ import util.queries as q;
 from util.constants import SPARK;
 
 def main():
-    airports = q.getActiveAirlinesInCountry("United States")
-    airports.show()
+    SPARK.sparkContext.setLogLevel("ERROR")
+    result = q.getTopKCities(10)
+    result.show()
 
 if __name__ == "__main__":
     main()

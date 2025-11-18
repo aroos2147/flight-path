@@ -4,7 +4,7 @@
 
 from util.constants import DRIVER, SPARK, NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD
 from graphframes import GraphFrame
-from pyspark.sql.functions import col 
+from pyspark.sql.functions import col, asc, desc, coalesce
 
 #######################################################################
 # BASIC
@@ -129,3 +129,22 @@ def getActiveAirlinesInCountry(country):
     return (getByQuery(f"MATCH (a:Airline{{active:true}})-[:LOCATED_IN]->(c:Country{{name:\"{country}\"}}) RETURN a")
             .select("a.*")
             .select("name", "iata", "icao", "callsign", "alias"))
+
+# Gets the country with the most airports
+def getCountryWithMostAirports():
+    counts = getByQuery("MATCH (:Airport)-[:LOCATED_IN]->(c:Country) RETURN c.name as country, count(*) AS airportCount")
+    top = counts.orderBy(desc("airportCount")).collect()[0]
+
+    return (top['country'], top['airportCount'])
+
+# Gets the top K cities with the most incoming/outgoing routes
+def getTopKCities(k):
+    cityToCity = getByQuery("MATCH (s:Airport)-[:OUTBOUND]->(r:Route)-[:INBOUND]->(d:Airport) RETURN s.city AS srcCity, d.city AS destCity")
+    outCounts = cityToCity.groupBy("srcCity").count().withColumnRenamed("count", "outCount")
+    inCounts = cityToCity.groupBy("destCity").count().withColumnRenamed("count", "inCount")
+    combined = (outCounts.join(inCounts, outCounts.srcCity == inCounts.destCity, how="outer")
+        .withColumn("city", col("srcCity")) # Could also be destCity or a coalesce, but there are no null or empty city names so this works
+        .withColumn("total", col("outCount") + col("inCount"))
+        .select("city", "outCount", "inCount", "total"))
+    
+    return combined.orderBy(desc("total")).limit(k)
