@@ -4,7 +4,7 @@
 
 from util.constants import DRIVER, SPARK, NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD
 from graphframes import GraphFrame
-from pyspark.sql.functions import col, asc, desc, coalesce
+from pyspark.sql.functions import col, desc
 
 #######################################################################
 # BASIC
@@ -76,11 +76,11 @@ def getRoutes():
 
 # Loads the neo4j OUTBOUND edges into a Spark dataframe
 def getOutboundRoutes():
-    return getEdges("Route", "Airport", "OUTBOUND")
+    return getEdges("Airport", "Route", "OUTBOUND")
 
-# Loads the neo4j OUTBOUND edges into a Spark dataframe
+# Loads the neo4j INBOUND edges into a Spark dataframe
 def getInboundRoutes():
-    return getEdges("Airport", "Route", "INBOUND")
+    return getEdges("Route", "Airport", "INBOUND")
 
 # Loads the neo4j airport LOCATED_IN edges into a Spark dataframe
 def getAirportsLocatedIn():
@@ -93,6 +93,25 @@ def getAirlinesLocatedIn():
 # Loads the neo4j USES edges into a Spark dataframe
 def getAirlineUses():
     return getEdges("Route", "Airline", "USES")
+
+# Creates a new graph frame containing all airports and the routes 
+# between them. The edges themselves contain minimal information (the route 
+# id, the source icao, and the dest icao), since it's nicer to have a less
+# cluttered graph. Additional airport/city/airline information can be retrieved
+# from those three properties alone after graph processing.
+def getTripGraph():
+    airports = (getAirports()
+                .select(col("icao").alias("id")))
+    inbound = (getInboundRoutes()
+               .select(col("`<source.id>`").alias("routeId"), 
+                       col("`target.icao`").alias("dst")))
+    outbound = (getOutboundRoutes()
+               .select(col("`source.icao`").alias("src"), 
+                       col("`<target.id>`").alias("routeId")))
+
+    edges = outbound.join(inbound, outbound.routeId == inbound.routeId).drop(inbound.routeId)
+
+    return GraphFrame(airports, edges)
 
 #######################################################################
 # ALGORITHMS
@@ -148,3 +167,8 @@ def getTopKCities(k):
         .select("city", "outCount", "inCount", "total"))
     
     return combined.orderBy(desc("total")).limit(k)
+
+def getShortestTrip(srcAirport, destAirport):
+    g = getTripGraph()
+    g.edges.show()
+    g.vertices.show()
