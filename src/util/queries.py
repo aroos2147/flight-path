@@ -44,6 +44,8 @@ def getEdges(source, target, relationship):
                 .option("relationship.target.labels", ":" + target)
                 .load())
 
+# Loads neo4j data into a Spark dataframe using the provided selection
+# query.
 def getByQuery(query):
     return (SPARK.read
                 .format("neo4j")
@@ -168,7 +170,18 @@ def getTopKCities(k):
     
     return combined.orderBy(desc("total")).limit(k)
 
-def getShortestTrip(srcAirport, destAirport):
+# Gets a trip from the source airport to the destination
+def getTrip(srcAirport, destAirport, constraint = 10):
     g = getTripGraph()
-    g.edges.show()
-    g.vertices.show()
+
+    path = g.bfs(
+        fromExpr=f"id = '{srcAirport}'",
+        toExpr=f"id = '{destAirport}'",
+        edgeFilter="",
+        maxPathLength=constraint)
+
+# Gets the connected components of the overall route graph
+def getCCs():
+    g = getTripGraph()
+
+    return g.connectedComponents()
